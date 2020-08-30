@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -110,7 +110,7 @@ func UpdateDomain(apiKey, apiEmail, domainNames, ipEndpoint string) error {
 
 		// Log the update.
 		// fmt.Printf("Updated %s to point to %s\n", record.Name, record.Content)
-		log.Println("Updated", record.Name, "to point to", record.Content)
+		fmt.Println("Updated", record.Name, "to point to", record.Content)
 	}
 
 	return nil
@@ -122,7 +122,6 @@ func main() {
 	var Interval int64
 
 	// Specify a default endpoint if no other one is provided.
-	// log.SetFlags(log.Ldate | log.Ltime)
 	const defaultIPEndpoint = "https://api.ipify.org/"
 
 	IPEndpoint = os.Getenv("CF_IP_ENDPOINT")
@@ -138,7 +137,7 @@ func main() {
 	} else {
 		IntervalOS, err := strconv.ParseInt(IntervalStr, 10, 64)
 		if err != nil {
-			log.Println("getenv interval failed")
+			fmt.Println("getenv interval failed")
 		}
 		Interval = IntervalOS
 	}
@@ -167,7 +166,7 @@ func main() {
 	for {
 		if err := UpdateDomain(APIKey, APIEmail, DomainNames, IPEndpoint); err != nil {
 			// fmt.Fprintln(os.Stderr, err.Error())
-			log.Println(err.Error())
+			fmt.Println(err.Error())
 		}
 		<-ticker.C
 	}

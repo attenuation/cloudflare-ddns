@@ -1,5 +1,5 @@
 pkgname=cloudflare-ddns
-pkgver=1.1.1
+pkgver=1.1.3
 pkgrel=1
 pkgdesc="Cloudflare DDNS client written by golang"
 arch=('x86_64')
@@ -9,7 +9,7 @@ depends=('glibc')
 makedepends=('go' 'git')
 backup=(etc/conf.d/cloudflare-ddns)
 source=("$pkgname-$pkgver.tar.gz::https://github.com/attenuation/cloudflare-ddns/archive/v$pkgver.tar.gz")
-sha512sums=('b3fb40c706b2d17bae835be8042cd129395aa6920c06f04cc63d22e57ed0c17f12d7333349127a80c84284509e812899533945cac31a15f287a24a0f9596f764')
+sha512sums=('SKIP')
 
 build() {
   cd "$pkgname-$pkgver"
