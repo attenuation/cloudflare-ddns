@@ -86,7 +86,7 @@ func UpdateDomain(apiKey, apiEmail, domainNames, ipEndpoint string) error {
 	}
 
 	if newIP == lastIP {
-		log.Println("Same ip with last", lastIP)
+		// log.Println("Same ip with last", lastIP)
 		return nil
 	}
 
