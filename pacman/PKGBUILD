@@ -1,0 +1,28 @@
+pkgname=cloudflare-ddns
+pkgver=1.1.0
+pkgrel=1
+pkgdesc="Cloudflare DDNS client written by golang"
+arch=('x86_64')
+url="https://github.com/attenuation/cloudflare-ddns"
+license=('MIT')
+depends=('glibc')
+makedepends=('go' 'git')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/attenuation/cloudflare-ddns/archive/v$pkgver.tar.gz")
+sha512sums=('5291687c4e348e153254e10620b5b5fa327525c11ab49d43808cb7f1dac113f9c09f4d9863b67bd127f706690538dce8eb7c93091c9c762820bdf215509fdf55')
+
+build() {
+  cd "$pkgname-$pkgver"
+  export GOFLAGS="-buildmode=pie -trimpath"
+  export CGO_LDFLAGS="${LDFLAGS}"
+  export CGO_CFLAGS="${CFLAGS}"
+  export CGO_CPPFLAGS="${CPPFLAGS}"
+  go build
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm644 systemd/cloudflare-ddns.service "$pkgdir"/usr/lib/systemd/system/cloudflare-ddns.service
+  install -Dm644 conf.d/cloudflare-ddns -t "$pkgdir"/etc/conf.d/cloudflare-ddns
+  install -dm755 "$pkgdir"/usr/bin
+  install -Dm755 cloudflare-ddns -t "$pkgdir"/usr/bin/
+}
