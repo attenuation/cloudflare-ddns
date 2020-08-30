@@ -2,15 +2,19 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/pkg/errors"
 )
+
+var lastIP string
 
 // GetRecord fetches the record from the Cloudflare api.
 func GetRecord(api *cloudflare.API, domainName string) (*cloudflare.DNSRecord, error) {
@@ -81,6 +85,11 @@ func UpdateDomain(apiKey, apiEmail, domainNames, ipEndpoint string) error {
 		return errors.Wrap(err, "could not get the current IP address")
 	}
 
+	if newIP == lastIP {
+		log.Println("Same ip with last", lastIP)
+		return nil
+	}
+
 	// Split the domain names by comma, and range over them.
 	splitDomainNames := strings.Split(domainNames, ",")
 	for _, domainName := range splitDomainNames {
@@ -93,12 +102,15 @@ func UpdateDomain(apiKey, apiEmail, domainNames, ipEndpoint string) error {
 		// Update the DNS record to include the new IP address.
 		record.Content = newIP
 
+		lastIP = newIP
+
 		if err := api.UpdateDNSRecord(record.ZoneID, record.ID, *record); err != nil {
 			return errors.Wrap(err, "could not update the DNS record")
 		}
 
 		// Log the update.
-		fmt.Printf("Updated %s to point to %s\n", record.Name, record.Content)
+		// fmt.Printf("Updated %s to point to %s\n", record.Name, record.Content)
+		log.Println("Updated", record.Name, "to point to", record.Content)
 	}
 
 	return nil
@@ -106,16 +118,29 @@ func UpdateDomain(apiKey, apiEmail, domainNames, ipEndpoint string) error {
 
 func main() {
 	// Extract the configuration from the environment.
-	var APIKey, APIEmail, DomainNames, IPEndpoint string
+	var APIKey, APIEmail, DomainNames, IPEndpoint, IntervalStr string
+	var Interval int64
 
 	// Specify a default endpoint if no other one is provided.
+	log.SetFlags(log.Ldate | log.Ltime)
 	const defaultIPEndpoint = "https://api.ipify.org/"
 
 	IPEndpoint = os.Getenv("CF_IP_ENDPOINT")
-
 	// Default to the defaultIPEndpoint if no alternative was specified.
 	if IPEndpoint == "" {
 		IPEndpoint = defaultIPEndpoint
+	}
+
+	const defaultInterval int64 = 300
+	IntervalStr = os.Getenv("DDNS_INTERVAL")
+	if IntervalStr == "" {
+		Interval = defaultInterval
+	} else {
+		IntervalOS, err := strconv.ParseInt(IntervalStr, 10, 64)
+		if err != nil {
+			log.Println("getenv interval failed")
+		}
+		Interval = IntervalOS
 	}
 
 	flags := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
@@ -125,6 +150,7 @@ func main() {
 	flags.StringVar(&APIEmail, "email", os.Getenv("CF_API_EMAIL"), "Email address associated with your Cloudflare account.")
 	flags.StringVar(&DomainNames, "domain", os.Getenv("CF_DOMAIN"), "Comma separated domain names that should be updated. (i.e. mypage.example.com OR example.com)")
 	flags.StringVar(&IPEndpoint, "ipendpoint", IPEndpoint, "Alternative ip address service endpoint.")
+	flags.Int64Var(&Interval, "interval", Interval, "Timer time second")
 
 	// Parse the flags in.
 	if err := flags.Parse(os.Args[1:]); err != nil {
@@ -137,8 +163,12 @@ func main() {
 		os.Exit(2)
 	}
 
-	if err := UpdateDomain(APIKey, APIEmail, DomainNames, IPEndpoint); err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+	ticker := time.NewTicker(time.Second * time.Duration(Interval))
+	for {
+		if err := UpdateDomain(APIKey, APIEmail, DomainNames, IPEndpoint); err != nil {
+			// fmt.Fprintln(os.Stderr, err.Error())
+			log.Println(err.Error())
+		}
+		<-ticker.C
 	}
 }

@@ -1,0 +1,18 @@
+[Unit]
+Description=Cloudflare DDNS Client
+After=network.target nss-lookup.target
+
+[Service]
+# If the version of systemd is 240 or above, then uncommenting Type=exec and commenting out Type=simple
+#Type=exec
+Type=simple
+# This service runs as root. You may consider to run it as another user for security concerns.
+# By uncommenting User=nobody and commenting out User=root, the service will run as user nobody.
+#User=root
+User=nobody
+EnvironmentFile=/etc/conf.d/cloudflare-ddns
+ExecStart=/usr/bin/cloudflare-ddns
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
