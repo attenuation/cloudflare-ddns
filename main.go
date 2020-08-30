@@ -122,7 +122,7 @@ func main() {
 	var Interval int64
 
 	// Specify a default endpoint if no other one is provided.
-	log.SetFlags(log.Ldate | log.Ltime)
+	// log.SetFlags(log.Ldate | log.Ltime)
 	const defaultIPEndpoint = "https://api.ipify.org/"
 
 	IPEndpoint = os.Getenv("CF_IP_ENDPOINT")

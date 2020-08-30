@@ -22,7 +22,7 @@ build() {
 package() {
   cd "$pkgname-$pkgver"
   install -Dm644 systemd/cloudflare-ddns.service "$pkgdir"/usr/lib/systemd/system/cloudflare-ddns.service
-  install -Dm644 conf.d/cloudflare-ddns -t "$pkgdir"/etc/conf.d/cloudflare-ddns
+  install -Dm644 conf.d/cloudflare-ddns -t "$pkgdir"/etc/conf.d/
   install -dm755 "$pkgdir"/usr/bin
   install -Dm755 cloudflare-ddns -t "$pkgdir"/usr/bin/
 }
